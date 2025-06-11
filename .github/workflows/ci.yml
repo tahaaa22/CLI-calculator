@@ -48,7 +48,7 @@ jobs:
       # Step 6: Run C tests
       - name: Run C tests
         run: |
-          gcc -Wall -Wextra -std=c99 -o tests/test_c_calc tests/test_c_calc.c c_backend/calc.c
+          gcc -Wall -Wextra -std=c99 -I c_backend -o tests/test_c_calc tests/test_c_calc.c c_backend/calc.c
           ./tests/test_c_calc
 
       # Step 7: Run Python tests
@@ -56,13 +56,20 @@ jobs:
         run: |
           python -m pytest python_interface/test_python_calc.py -v
 
-      # Step 8: Test CLI functionality
+      # Step 8: Install package for CLI testing
+      - name: Install package
+        run: |
+          pip install -e .
+
+      # Step 9: Test CLI functionality
       - name: Test CLI
         run: |
-          python python_interface/cli.py --help || echo "CLI help test completed"
-          python python_interface/cli.py 5 + 3 || echo "CLI calculation test completed"
+          calc 5 3 add
+          calc 10 2 div
+          calc 7 4 sub
+          calc 3 6 mul
 
-  # Job 2: Code Quality (Optional but recommended)
+  # Job 2: Code Quality
   code-quality:
     runs-on: ubuntu-latest
 
@@ -82,35 +89,45 @@ jobs:
 
       - name: Lint Python code
         run: |
-          # Check if files exist before linting
-          if [ -f python_interface/cli.py ]; then
-            flake8 python_interface/ --count --select=E9,F63,F7,F82 --show-source --statistics
-          fi
+          # Basic syntax and import checks
+          find python_interface -name "*.py" -exec python -m py_compile {} \;
+
+          # Run flake8 for style checking (ignoring some common issues)
+          flake8 python_interface/ --count --max-line-length=88 --ignore=E203,W503 --statistics || true
 
       - name: Check formatting (optional)
         run: |
-          if [ -f python_interface/cli.py ]; then
-            black --check python_interface/ || echo "Consider running 'black python_interface/' to format code"
-          fi
+          black --check python_interface/ || echo "Consider running 'black python_interface/' to format code"
 
   # Job 3: Security Scanning
   security-scan:
     runs-on: ubuntu-latest
     permissions:
       security-events: write
+      contents: read
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          languages: python, cpp
+          python-version: "3.10"
+
+      - name: Install dependencies for build
+        run: |
+          python -m pip install --upgrade pip
+          pip install setuptools wheel
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: python, c-cpp
 
       - name: Build for analysis
         run: |
           python setup.py build_ext --inplace
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@v3

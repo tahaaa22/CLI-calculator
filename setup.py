@@ -1,16 +1,12 @@
 # setup.py
 from setuptools import setup, Extension
+import os
 
+# Define the C extension
 calc_ext = Extension(
     "calculator._calc",
-    sources=[
-        "python_interface/calculator.c",
-        "c_backend/calc.c"
-    ],
-    include_dirs=[
-        "python_interface",
-        "c_backend"
-    ],
+    sources=["python_interface/calculator.c", "c_backend/calc.c"],
+    include_dirs=["python_interface", "c_backend"],
 )
 
 setup(
@@ -27,4 +23,5 @@ setup(
         ]
     },
     python_requires=">=3.7",
+    zip_safe=False,  # Important for C extensions
 )
