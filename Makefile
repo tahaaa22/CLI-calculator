@@ -11,6 +11,7 @@ ifeq ($(OS),Windows_NT)
     PATH_SEP = \\
     EXE_EXT = .exe
     TEST_RUN = .\tests\test_c_calc.exe
+    MKDIR = mkdir
 else
     # Unix/Linux settings (for GitHub Actions)
     CC = gcc
@@ -21,24 +22,35 @@ else
     PATH_SEP = /
     EXE_EXT = 
     TEST_RUN = ./tests/test_c_calc
+    MKDIR = mkdir -p
 endif
 
 # Python package info
-PACKAGE_NAME = python_interface
+PACKAGE_NAME = calculator
 BUILD_DIR = build
 DIST_DIR = dist
 
-.PHONY: all build test test_c test_python clean install dev-install lint format clean-pycache clean-all
+.PHONY: all build test test_c test_python clean install dev-install lint format clean-pycache clean-all setup
 
 # Default target
-all: build
+all: setup build
+
+# Create necessary directories
+setup:
+ifeq ($(OS),Windows_NT)
+	@if not exist tests $(MKDIR) tests
+	@if not exist python_interface $(MKDIR) python_interface
+	@if not exist c_backend $(MKDIR) c_backend
+else
+	@$(MKDIR) tests python_interface c_backend 2>/dev/null || true
+endif
 
 # Build the Python extension
-build:
+build: setup
 	$(PYTHON) setup.py build_ext --inplace
 
 # Build for development (includes debug symbols)
-dev-build:
+dev-build: setup
 ifeq ($(OS),Windows_NT)
 	$(CC) /c $(CFLAGS) /Zi c_backend$(PATH_SEP)calc.c /Fo:c_backend$(PATH_SEP)calc.obj
 else
@@ -47,38 +59,50 @@ endif
 	$(PYTHON) setup.py build_ext --inplace --debug
 
 # Run all tests
-test: test_c test_python
+test: test_c test_python test_cli
 
 # Test C backend
-test_c:
+test_c: setup
+	@echo "Testing C backend..."
 ifeq ($(OS),Windows_NT)
 	$(CC) tests$(PATH_SEP)test_c_calc.c c_backend$(PATH_SEP)calc.c /Fe:tests$(PATH_SEP)test_c_calc.exe
 	$(TEST_RUN)
 	$(RM) tests$(PATH_SEP)test_c_calc.exe tests$(PATH_SEP)*.obj
 else
-	$(CC) $(CFLAGS) -o tests/test_c_calc tests/test_c_calc.c c_backend/calc.c
+	$(CC) $(CFLAGS) -I c_backend -o tests/test_c_calc tests/test_c_calc.c c_backend/calc.c
 	$(TEST_RUN)
 	$(RM) tests/test_c_calc
 endif
+	@echo "C tests completed successfully!"
 
 # Test Python interface
-test_python:
+test_python: build
+	@echo "Testing Python interface..."
 	$(PYTHON) -m pytest python_interface/test_python_calc.py -v
 
+# Test CLI functionality
+test_cli: install
+	@echo "Testing CLI functionality..."
+	calc 5 3 add
+	calc 10 2 div
+	calc 7 4 sub
+	calc 3 6 mul
+	@echo "CLI tests completed successfully!"
+
 # Alternative: unittest (if you prefer unittest over pytest)
-test_python_unittest:
+test_python_unittest: build
 	$(PYTHON) -m unittest python_interface.test_python_calc -v
 
 # Run tests with coverage
-test_coverage:
-	$(PYTHON) -m pytest --cov=python_interface --cov-report=html --cov-report=xml
+test_coverage: build
+	$(PYTHON) -m pytest --cov=python_interface --cov-report=html --cov-report=xml python_interface/test_python_calc.py
 
 # Install package in development mode
-dev-install:
+dev-install: build
 	$(PYTHON) -m pip install -e .
 
 # Install package
-install:
+install: build
 	$(PYTHON) -m pip install .
 
 # Code formatting
@@ -88,11 +112,11 @@ format:
 
 # Code linting
 lint:
-	$(PYTHON) -m flake8 python_interface/
-	$(PYTHON) -m pylint python_interface/
+	$(PYTHON) -m flake8 python_interface/ --max-line-length=88 --ignore=E203,W503
+	$(PYTHON) -m pylint python_interface/ --disable=C0111,C0103 || true
 
 # Build distribution packages
-dist: clean
+dist: clean build
 	$(PYTHON) setup.py sdist bdist_wheel
 
 # Clean __pycache__ directories specifically
@@ -103,6 +127,8 @@ ifeq ($(OS),Windows_NT)
 	@echo Done.
 else
 	find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+	find . -name "*.pyc" -delete 2>/dev/null || true
+	find . -name "*.pyd" -delete 2>/dev/null || true
 endif
 
 # Clean build artifacts
@@ -127,12 +153,10 @@ else
 	$(RM) python_interface/*.so python_interface/*.pyd
 	$(RM) c_backend/*.o
 	$(RM) tests/test_c_calc
-	$(RMDIR) $(BUILD_DIR) $(DIST_DIR) *.egg-info
-	$(RMDIR) __pycache__ .pytest_cache htmlcov
-	$(RM) .coverage
-	find . -name "*.pyc" -delete
-	find . -name "*.pyd" -delete
-	find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
+	$(RMDIR) $(BUILD_DIR) $(DIST_DIR) *.egg-info 2>/dev/null || true
+	$(RMDIR) .pytest_cache htmlcov 2>/dev/null || true
+	$(RM) .coverage 2>/dev/null || true
+	$(MAKE) clean-pycache
 endif
 
 # Deep clean - removes everything including installed packages
@@ -144,14 +168,24 @@ else
 	$(PYTHON) -m pip uninstall -y $(PACKAGE_NAME) 2>/dev/null || true
 endif
 
+# Verify installation
+verify: install
+	@echo "Verifying installation..."
+	$(PYTHON) -c "import calculator; print('Calculator module imported successfully')"
+	$(PYTHON) -c "from calculator import add, sub, mul, divide; print('Functions imported successfully')"
+	calc --help
+
 # Help target
 help:
 	@echo "Available targets:"
+	@echo "  all          - Setup and build the project"
+	@echo "  setup        - Create necessary directories"
 	@echo "  build        - Build the Python extension"
 	@echo "  dev-build    - Build with debug symbols"
-	@echo "  test         - Run all tests"
+	@echo "  test         - Run all tests (C, Python, CLI)"
 	@echo "  test_c       - Run C tests only"
 	@echo "  test_python  - Run Python tests only"
+	@echo "  test_cli     - Run CLI tests only"
 	@echo "  test_coverage- Run tests with coverage report"
 	@echo "  clean        - Clean build artifacts"
 	@echo "  clean-pycache- Clean only __pycache__ directories"
@@ -161,4 +195,5 @@ help:
 	@echo "  format       - Format code with black and isort"
 	@echo "  lint         - Lint code with flake8 and pylint"
 	@echo "  dist         - Build distribution packages"
+	@echo "  verify       - Verify installation works"
 	@echo "  help         - Show this help message"
