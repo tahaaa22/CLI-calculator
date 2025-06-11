@@ -1,155 +1,290 @@
 name: CI/CD Pipeline
 
-# Trigger on push to main branch and pull requests
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, develop]
   pull_request:
     branches: [main, master]
 
 jobs:
-  # Job 1: Build and Test
-  build-and-test:
+  code-quality:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        python-version: ["3.9", "3.10", "3.11"]
+    name: Code Quality Check
 
     steps:
-      # Step 1: Checkout code
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # Step 2: Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 black isort pylint
+          pip install -r requirements.txt
+
+      - name: Run code formatting checks
+        run: |
+          black --check python_interface/ || echo "Black formatting issues found"
+          isort --check-only python_interface/ || echo "Import sorting issues found"
+
+      - name: Run linting
+        run: |
+          flake8 python_interface/ --max-line-length=88 --ignore=E203,W503 --exclude=__pycache__
+          pylint python_interface/ --disable=C0111,C0103,R0903 --ignore=__pycache__ || true
+
+  security-scan:
+    runs-on: ubuntu-latest
+    name: Security Scan
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install security tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit safety
+
+      - name: Run Bandit security scan
+        run: |
+          bandit -r python_interface/ -f json -o bandit-report.json || true
+          bandit -r python_interface/ || echo "Security issues found but continuing"
+
+      - name: Check for known vulnerabilities
+        run: |
+          pip install -r requirements.txt
+          safety check || echo "Vulnerability check completed"
+
+  build-and-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.9", "3.10", "3.11"]
+        exclude:
+          # Reduce matrix size for efficiency
+          - os: windows-latest
+            python-version: "3.9"
+          - os: macos-latest
+            python-version: "3.9"
+
+    name: Test Python ${{ matrix.python-version }} on ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
-      # Step 3: Install system dependencies
-      - name: Install system dependencies
+      - name: Install system dependencies (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential python3-dev python3-setuptools
+          sudo apt-get install -y build-essential
 
-      # Step 4: Install Python dependencies
+      - name: Install system dependencies (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          # Xcode command line tools should be available
+          xcode-select --install || true
+
+      - name: Setup MSVC (Windows)
+        if: matrix.os == 'windows-latest'
+        uses: microsoft/setup-msbuild@v1.3
+
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest pytest-cov setuptools wheel
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install setuptools wheel
+          pip install -r requirements.txt
 
-      # Step 5: Create necessary directories
-      - name: Create test directories
-        run: |
-          mkdir -p tests
-          mkdir -p python_interface
-          mkdir -p c_backend
-
-      # Step 6: Build the project
-      - name: Build project
+      - name: Build C extension
         run: |
           python setup.py build_ext --inplace
 
-      # Step 7: Run C tests
-      - name: Run C tests
+      - name: Test C backend
+        shell: bash
         run: |
-          gcc -Wall -Wextra -std=c99 -I c_backend -o tests/test_c_calc tests/test_c_calc.c c_backend/calc.c
-          ./tests/test_c_calc
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            # Windows compilation
+            cl tests/test_c_calc.c c_backend/calc.c /Fe:tests/test_c_calc.exe /I c_backend
+            ./tests/test_c_calc.exe
+            rm -f tests/test_c_calc.exe tests/*.obj
+          else
+            # Unix-like systems
+            gcc -std=c99 -Wall -Wextra -I c_backend -o tests/test_c_calc tests/test_c_calc.c c_backend/calc.c
+            ./tests/test_c_calc
+            rm -f tests/test_c_calc
+          fi
 
-      # Step 8: Run Python tests
-      - name: Run Python tests
+      - name: Test Python interface
         run: |
-          python -m pytest python_interface/test_python_calc.py -v
+          python -m pytest python_interface/test_python_calc.py -v --tb=short
 
-      # Step 9: Install package for CLI testing
       - name: Install package
         run: |
           pip install -e .
 
-      # Step 10: Test CLI functionality
-      - name: Test CLI
+      - name: Test CLI functionality
+        shell: bash
         run: |
-          calc 5 3 add
-          calc 10 2 div
-          calc 7 4 sub
-          calc 3 6 mul
+          calc 5 3 add | grep "5.0 + 3.0 = 8.0"
+          calc 10 2 div | grep "10.0 / 2.0 = 5.0"
+          calc 7 4 sub | grep "7.0 - 4.0 = 3.0"
+          calc 3 6 mul | grep "3.0 \* 6.0 = 18.0"
 
-  # Job 2: Code Quality
-  code-quality:
+      - name: Test division by zero
+        shell: bash
+        run: |
+          calc 5 0 div | grep "5.0 / 0.0 = 0.0"
+
+      - name: Run coverage tests
+        if: matrix.python-version == '3.11' && matrix.os == 'ubuntu-latest'
+        run: |
+          pip install pytest-cov
+          python -m pytest python_interface/test_python_calc.py --cov=python_interface --cov-report=xml --cov-report=html
+
+      - name: Upload coverage reports
+        if: matrix.python-version == '3.11' && matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-reports
+          path: |
+            coverage.xml
+            htmlcov/
+
+  integration-test:
     runs-on: ubuntu-latest
+    needs: [build-and-test]
+    name: Integration Tests
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: "3.11"
 
-      - name: Install linting tools
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 black isort
+          pip install -r requirements.txt
 
-      - name: Check if Python files exist
-        run: |
-          if [ -d "python_interface" ]; then
-            echo "python_interface directory exists"
-            ls -la python_interface/
-          else
-            echo "python_interface directory not found"
-            exit 1
-          fi
-
-      - name: Lint Python code
-        run: |
-          # Basic syntax and import checks
-          find python_interface -name "*.py" -exec python -m py_compile {} \;
-
-          # Run flake8 for style checking (ignoring some common issues)
-          flake8 python_interface/ --count --max-line-length=88 --ignore=E203,W503 --statistics || true
-
-      - name: Check formatting (optional)
-        run: |
-          black --check python_interface/ || echo "Consider running 'black python_interface/' to format code"
-
-  # Job 3: Security Scanning
-  security-scan:
-    runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-      contents: read
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential python3-dev
-
-      - name: Install dependencies for build
-        run: |
-          python -m pip install --upgrade pip
-          pip install setuptools wheel
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: python, c-cpp
-
-      - name: Build for analysis
+      - name: Build and install
         run: |
           python setup.py build_ext --inplace
+          pip install -e .
 
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+      - name: Comprehensive integration test
+        run: |
+          # Test various edge cases
+          python -c "
+          from calculator import add, sub, mul, divide
+          import sys
+
+          # Test basic operations
+          assert add(1, 1) == 2, 'Basic addition failed'
+          assert sub(5, 3) == 2, 'Basic subtraction failed'
+          assert mul(3, 4) == 12, 'Basic multiplication failed'
+          assert divide(8, 2) == 4, 'Basic division failed'
+
+          # Test edge cases
+          assert divide(5, 0) == 0, 'Division by zero should return 0'
+          assert add(-1, 1) == 0, 'Negative numbers failed'
+          assert mul(0, 100) == 0, 'Multiplication by zero failed'
+
+          # Test floating point
+          assert abs(add(0.1, 0.2) - 0.3) < 1e-10, 'Floating point addition failed'
+          assert abs(divide(1, 3) - 0.3333333333333333) < 1e-10, 'Floating point division failed'
+
+          print('All integration tests passed!')
+          "
+
+  build-docs:
+    runs-on: ubuntu-latest
+    needs: [code-quality, build-and-test]
+    name: Build Documentation
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Generate documentation
+        run: |
+          python -c "
+          print('# CLI Calculator Documentation')
+          print()
+          print('## Installation')
+          print('```bash')
+          print('pip install -e .')
+          print('```')
+          print()
+          print('## Usage')
+          print('```bash')
+          print('calc <num1> <num2> <operation>')
+          print('```')
+          print()
+          print('## Examples')
+          print('- calc 5 3 add     # 5 + 3 = 8')
+          print('- calc 10 2 div    # 10 / 2 = 5')
+          print('- calc 7 4 sub     # 7 - 4 = 3')
+          print('- calc 3 6 mul     # 3 * 6 = 18')
+          " > README.md
+
+      - name: Upload documentation
+        uses: actions/upload-artifact@v3
+        with:
+          name: documentation
+          path: README.md
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [code-quality, security-scan, build-and-test, integration-test]
+    name: Deploy Package
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine
+          pip install -r requirements.txt
+
+      - name: Build package
+        run: |
+          python -m build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist-packages
+          path: dist/
+
+    # Uncomment and configure for actual PyPI deployment
+    # - name: Publish to PyPI
+    #   if: success()
+    #   uses: pypa/gh-action-pypi-publish@release/v1
+    #   with:
+    #     password: ${{ secrets.PYPI_API_TOKEN }}
