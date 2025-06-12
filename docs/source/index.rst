@@ -28,14 +28,6 @@ Run the CLI calculator from the command line:
    python -m python_interface.cli 10 2 div
    # Output: 10.0 / 2.0 = 5.0
 
-Python API
-----------
-
-.. automodule:: cli
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 C Extension API
 ---------------
 
