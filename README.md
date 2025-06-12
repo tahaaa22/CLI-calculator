@@ -64,7 +64,7 @@ CLI-calculator/
 
 ### 📌 Method 1 — Install with Make (if you have Chocolatey)
 
-> Recommended if you have Chocolatey installed. Install Make via Chocolatey:
+> Recommended if you have Chocolatey installed. Install Make via Chocolatey in an elevated windows powershell (Administrator):
 
 ```
 choco install make
@@ -106,7 +106,7 @@ cd CLI-calculator
 2️⃣ Install dependencies:
 ```
 pip install -r requirements.txt
-pip install pre-commit
+pip install pre-commit OR python -m pre_commit install
 pre-commit install
 ```
 3️⃣ Install in development (editable) mode:
