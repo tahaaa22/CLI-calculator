@@ -4,30 +4,29 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../..'))
+
+sys.path.insert(0, os.path.abspath("../.."))
 
 # -- Project information -----------------------------------------------------
 
-project = 'CLI Calculator'
-copyright = '2025, docs/source'
-author = 'docs/source'
-release = 'docs/build'
+project = "CLI Calculator"
+copyright = "2025, docs/source"
+author = "docs/source"
+release = "docs/build"
 
 # -- General configuration ---------------------------------------------------
 
-extensions = ['sphinx.ext.autodoc', 'breathe']
+extensions = ["sphinx.ext.autodoc", "breathe"]
 
-templates_path = ['_templates']
+templates_path = ["_templates"]
 exclude_patterns = []
 
-breathe_projects = {
-    "CLI-calculator": "../../xml"
-}
+breathe_projects = {"CLI-calculator": "../../xml"}
 breathe_default_project = "CLI-calculator"
 
-language = 'en'
+language = "en"
 
 # -- Options for HTML output -------------------------------------------------
 
-html_theme = 'alabaster'
-html_static_path = ['_static']
+html_theme = "alabaster"
+html_static_path = ["_static"]

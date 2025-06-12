@@ -13,6 +13,7 @@ Usage examples:
 """
 import argparse
 import sys
+
 print("PYTHONPATH:", sys.path)
 try:
     from . import add, sub, mul, divide
@@ -27,7 +28,7 @@ def main():
     """
     Main CLI function.
 
-    Parses command-line arguments and performs the requested arithmetic operation.
+    Parses CL arguments and performs the requested arithmetic operation.
 
     :raises KeyboardInterrupt: If the operation is cancelled by the user.
     :raises Exception: For any other errors during calculation.
