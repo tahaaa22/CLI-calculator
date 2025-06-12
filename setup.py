@@ -1,6 +1,5 @@
 # setup.py
 from setuptools import setup, Extension
-import os
 
 # Define the C extension
 calc_ext = Extension(

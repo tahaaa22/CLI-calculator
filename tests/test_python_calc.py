@@ -16,9 +16,7 @@ except ImportError:
         try:
             from python_interface import _calc
         except ImportError:
-            raise ImportError(
-                "Cannot import _calc module. Make sure the C extension is built."
-            )
+            raise ImportError("Cannot import _calc module. ")
 
 
 class TestCalcPython(unittest.TestCase):
@@ -40,7 +38,7 @@ class TestCalcPython(unittest.TestCase):
     def test_divide(self):
         self.assertEqual(_calc.divide(6, 3), 2)
         self.assertEqual(_calc.divide(5, 0), 0)  # Division by zero returns 0
-        self.assertAlmostEqual(_calc.divide(1, 3), 0.3333333333333333, places=10)
+        self.assertAlmostEqual(_calc.divide(1, 3), 0.3333333333333, places=10)
 
     def test_edge_cases(self):
         # Test very large numbers
