@@ -62,6 +62,17 @@ CLI-calculator/
 
 ## 🚀 Quick Installation Options
 
+### Important Note
+> It is recommended to create a local environment inside the folder to avoid issues coming from having multiple interpreters installed, even on Anaconda.
+```
+python -m venv .venv
+cd .venv/Scripts
+activate.bat
+cd ..
+cd ..
+```
+This step is important for any of the following methods.
+
 ### 📌 Method 1 — Install with Make (if you have Chocolatey)
 
 > Recommended if you have Chocolatey installed. Install Make via Chocolatey in an elevated windows powershell (Administrator):
