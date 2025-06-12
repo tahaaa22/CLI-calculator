@@ -4,10 +4,15 @@ A high-performance command-line calculator with a C backend and Python interface
 # Features:
 
 Fast C Backend: Core arithmetic operations implemented in C for optimal performance
+
 Python Interface: Easy-to-use Python bindings using the Python C API
+
 Command Line Interface: Simple and intuitive CLI for quick calculations
+
 Cross-Platform: Compatible with Windows, macOS, and Linux
+
 Comprehensive Testing: Includes both C and Python test suites with CI/CD integration
+
 Development Tools: Support for code formatting, linting, and coverage reporting
 
 
