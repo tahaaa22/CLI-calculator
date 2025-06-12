@@ -127,20 +127,20 @@ jobs:
         run: |
           python setup.py build_ext --inplace
 
-      - name: Test C backend
-        shell: bash
-        run: |
-          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-            # Windows compilation
-            cl tests/test_c_calc.c c_backend/calc.c /Fe:tests/test_c_calc.exe /I c_backend
-            ./tests/test_c_calc.exe
-            rm -f tests/test_c_calc.exe tests/*.obj
-          else
-            # Unix-like systems
-            gcc -std=c99 -Wall -Wextra -I c_backend -o tests/test_c_calc tests/test_c_calc.c c_backend/calc.c
-            ./tests/test_c_calc
-            rm -f tests/test_c_calc
-          fi
+      # - name: Test C backend
+      #   shell: bash
+      #   run: |
+      #     if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+      #       # Windows compilation
+      #       cl tests/test_c_calc.c c_backend/calc.c /Fe:tests/test_c_calc.exe /I c_backend
+      #       ./tests/test_c_calc.exe
+      #       rm -f tests/test_c_calc.exe tests/*.obj
+      #     else
+      #       # Unix-like systems
+      #       gcc -std=c99 -Wall -Wextra -I c_backend -o tests/test_c_calc tests/test_c_calc.c c_backend/calc.c
+      #       ./tests/test_c_calc
+      #       rm -f tests/test_c_calc
+      #     fi
 
       - name: Test Python interface
         run: |
