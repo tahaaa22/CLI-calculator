@@ -1,31 +1,38 @@
 #!/usr/bin/env python3
 """
-CLI Calculator - Command line interface for the calculator module
+CLI Calculator - Command line interface for the calculator module.
+
+This script provides a command-line interface to perform basic arithmetic
+operations (add, subtract, multiply, divide) using the calculator module.
+
+Usage examples:
+    calc 5 3 add     # Addition: 5 + 3 = 8
+    calc 10 2 div    # Division: 10 / 2 = 5
+    calc 7 4 sub     # Subtraction: 7 - 4 = 3
+    calc 3 6 mul     # Multiplication: 3 * 6 = 18
 """
 import argparse
 import sys
-
+print("PYTHONPATH:", sys.path)
 try:
     from . import add, sub, mul, divide
-except ImportError:
-    # Handle case when running as script directly
-    from calculator import add, sub, mul, divide
+except (ImportError, SystemError):
+    try:
+        from python_interface import add, sub, mul, divide
+    except ImportError:
+        from calculator import add, sub, mul, divide
 
 
 def main():
-    """Main CLI function"""
-    parser = argparse.ArgumentParser(
-        description="CLI Calculator - Perform basic arithmetic operations",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  calc 5 3 add     # Addition: 5 + 3 = 8
-  calc 10 2 div    # Division: 10 / 2 = 5
-  calc 7 4 sub     # Subtraction: 7 - 4 = 3
-  calc 3 6 mul     # Multiplication: 3 * 6 = 18
-        """,
-    )
+    """
+    Main CLI function.
 
+    Parses command-line arguments and performs the requested arithmetic operation.
+
+    :raises KeyboardInterrupt: If the operation is cancelled by the user.
+    :raises Exception: For any other errors during calculation.
+    """
+    parser = argparse.ArgumentParser(description="CLI Calculator")
     parser.add_argument("a", type=float, help="First number")
     parser.add_argument("b", type=float, help="Second number")
     parser.add_argument(

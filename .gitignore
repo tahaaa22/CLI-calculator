@@ -1,3 +1,7 @@
 .ninja_log
-.vscode/*
-
+**/.vscode/
+python_interface/__pycache__/
+python_interface/*.pyc
+# Ignore all build directories recursively
+**/build/
+**/python_interface/__pycache__/
