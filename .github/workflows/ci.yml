@@ -181,7 +181,7 @@ jobs:
 
       - name: Upload coverage reports
         if: matrix.python-version == '3.11' && matrix.os == 'ubuntu-latest'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-reports
           path: |
@@ -281,7 +281,7 @@ jobs:
           " > README.md
 
       - name: Upload documentation
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: documentation
           path: README.md
@@ -320,7 +320,7 @@ jobs:
           python -m build
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dist-packages
           path: dist/
