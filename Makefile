@@ -32,7 +32,7 @@ PACKAGE_NAME = calculator
 BUILD_DIR = build
 DIST_DIR = dist
 
-.PHONY: all build test test_c test_python clean install dev-install lint format clean-pycache clean-all setup
+.PHONY: all build test test_c test_python clean install dev-install lint format clean-pycache clean-all setup lint docs
 
 # Default target
 all: setup build
@@ -92,7 +92,7 @@ test_python: build
 	$(PYTHON) -m pytest tests/test_python_calc.py -v
 
 # Test CLI functionality
-test_cli: install
+test_cli: 
 	@echo "Testing CLI functionality..."
 	@echo "Running basic calculator tests..."
 	@calc 5 3 add || echo "Addition test failed"
@@ -126,6 +126,7 @@ format:
 # Code linting
 lint:
 	@echo "Linting code..."
+	-$(PYTHON) -m pre-commit run --all-files
 	-$(PYTHON) -m flake8 python_interface/ --max-line-length=88 --ignore=E203,W503,E501 2>$(NULL_DEVICE) || echo "flake8 issues found"
 	-$(PYTHON) -m pylint python_interface/ --disable=C0111,C0103,R0903,C0114,C0115,C0116 2>$(NULL_DEVICE) || echo "pylint issues found"
 
@@ -145,6 +146,10 @@ else
 	-find . -name "*.pyd" -delete 2>$(NULL_DEVICE) || true
 endif
 	@echo "Cache cleanup completed."
+
+# Build Sphinx documentation
+docs:
+	python -m sphinx.cmd.build -b html docs/source docs/build
 
 # Clean build artifacts
 clean: clean-pycache
@@ -195,6 +200,9 @@ dev-setup: setup
 	$(PYTHON) -m pip install --upgrade pip
 	$(PYTHON) -m pip install pytest pytest-cov black isort flake8 pylint
 	$(PYTHON) -m pip install -r requirements.txt
+	$(PYTHON) -m pip install  pre-commit sphinx ninja
+	$(PYTHON) -m pre-commit install
+	
 
 # Quick test - run a simple functionality check
 quick-test: build
