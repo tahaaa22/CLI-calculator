@@ -93,7 +93,8 @@ pip install -r requirements.txt
 ```
 3️⃣ Install pre-commit hooks:
 ```
-pre-commit install
+python -m pre_commit install
+python -m pre_commit run --all-files
 ```
 4️⃣ Install and build:
 ```
@@ -117,8 +118,7 @@ cd CLI-calculator
 2️⃣ Install dependencies:
 ```
 pip install -r requirements.txt
-pip install pre-commit OR python -m pre_commit install
-pre-commit install
+python -m pre_commit install
 ```
 3️⃣ Install in development (editable) mode:
 ```
@@ -158,6 +158,8 @@ ninja extbuild
 ```
 3️⃣ Run C unit tests:
 ```
+ninja testc_compile
+ninja testc_run
 ninja testc
 ```
 4️⃣ Run Python unit tests:
@@ -168,22 +170,39 @@ ninja testpy
 ```
 python python_interface/cli.py add 5 3
 ```
-6️⃣ Generate Sphinx docs:
+
+---
+
+### Generate Sphinx docs and run:
+
+   Install Doxygen :
+      https://www.doxygen.nl/download.html
+
+(make sure you are in the root)
+
 ```
-python -m sphinx.cmd.build -b html docs/source docs/build
+doxygen Doxyfile
+sphinx-build -b html docs/source docs/build
+cd docs/build
+start index.html
 ```
+
 or via Ninja:
 ```
+cd ..
+cd .. #return to the root
 ninja docs
 ```
 7️⃣ Clean build artifacts:
 ```
 ninja cleanall
 ```
-8️⃣ Pre-commit setup:
+---
+
+### Pre-commit setup:
 ```
-pre-commit install
-pre-commit run --all-files
+python -m pre_commit install
+python -m pre_commit run --all-files
 ```
 
 ---

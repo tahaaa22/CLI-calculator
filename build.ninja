@@ -4,7 +4,7 @@ ldflags = -LC:\Python312\libs -lpython312
 
 # === Rules ===
 
-# Compile C backend
+# Compile C backend (optional)
 rule compile_c
   command = gcc $cflags -c c_backend/calc.c -o c_backend/calc.o
 
@@ -12,27 +12,40 @@ rule compile_c
 rule build_ext
   command = python setup.py build_ext --inplace
 
-# Run C unit tests
-rule test_c
-  command = gcc c_backend/test_calc.c c_backend/calc.c -o c_backend/test_calc.exe && c_backend/test_calc.exe
+# Compile C unit test binary
+rule test_c_compile
+  command = gcc tests/test_c_calc.c c_backend/calc.c -o tests/test_c_calc.exe
+
+# Run C unit test binary
+rule test_c_run
+  command = tests/test_c_calc.exe
 
 # Run Python unit tests
 rule test_python
-  command = python -m unittest discover python_interface/tests
+  command = python -m unittest discover tests
+
+# Run pre-commit checks
+rule precommit
+  command = powershell -command "python -m pre_commit install; python -m pre_commit run --all-files"
 
 # Build Sphinx docs
 rule docs
-  command = make -C docs html
+  command = powershell -Command "doxygen Doxyfile; python -m sphinx.cmd.build -b html docs/source docs/build; start docs/build/index.html"
 
-# Clean all build artifacts safely on Windows
+# Clean build artifacts safely on Windows
 rule clean
-    command = powershell -Command "if (Test-Path build) { Remove-Item -Recurse -Force build }; if (Test-Path dist) { Remove-Item -Recurse -Force dist }; Get-ChildItem -Recurse -Include *.pyd,*.exp,*.lib | Remove-Item -Force -ErrorAction SilentlyContinue; Get-ChildItem c_backend -Include *.o,test_calc.exe -Recurse | Remove-Item -Force -ErrorAction SilentlyContinue; Get-ChildItem -Directory -Recurse -Include __pycache__ | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue"
+  command = powershell -Command "if (Test-Path build) { Remove-Item -Recurse -Force build }; if (Test-Path dist) { Remove-Item -Recurse -Force dist }; Get-ChildItem -Recurse -Include *.pyd,*.exp,*.lib | Remove-Item -Force -ErrorAction SilentlyContinue; Get-ChildItem c_backend -Include *.o,test_calc.exe -Recurse | Remove-Item -Force -ErrorAction SilentlyContinue; Get-ChildItem tests -Include *.exe -Recurse | Remove-Item -Force -ErrorAction SilentlyContinue; Get-ChildItem -Directory -Recurse -Include __pycache__ | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue"
 
 # === Targets ===
 
 build cbuild: compile_c
 build extbuild: build_ext
-build testc: test_c
+
+build testc_compile: test_c_compile
+build testc_run: test_c_run
+build testc: phony testc_compile testc_run
+
 build testpy: test_python
+build lint: precommit
 build docs: docs
 build cleanall: clean

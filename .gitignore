@@ -5,3 +5,6 @@ python_interface/*.pyc
 # Ignore all build directories recursively
 **/build/
 **/python_interface/__pycache__/
+tests/test_c_calc.exe
+**/__pycache__/
+python_interface/_calc.cp312-win_amd64.pyd
