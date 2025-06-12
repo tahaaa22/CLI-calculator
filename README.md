@@ -16,28 +16,30 @@ Development Tools: Support for code formatting, linting, and coverage reporting
 
 # Quick Install (Method 1 - Using Make)
 
-Step 1: Clone the repository
+Step 1: Run CMD as Adminstrator then For Window Install via Chocolatey (Recommended if you have Chocolatey):
+choco install make
+
+Step 2: Clone the repository
 Run the following command:
 git clone <repository-url>
 Then navigate into the project directory:
 cd calculator
 
-Step 2:For Window: Install via Chocolatey (Recommended if you have Chocolatey):
-choco install make
+Step 3: Run in Terminal (pip install -r requirements.txt)
 
-Step 3: Install dependencies and setup
+Step 4: Install dependencies and setup
 Run:
 make install
 
-Step 4: Build the C extension
+Step 5: Build the C extension
 Run:
 make build
 
-Step 5: Test the Python interface
+Step 6: Test the Python interface
 Run:
 make test_python
 
-Step 6: Clean up build artifacts
+Step 7: Clean up build artifacts
 Run:
 make clean
 
@@ -60,9 +62,9 @@ python
 
 Step 4: In the Python interactive session, run the following commands:
 
-import calculator as cal
-cal.mul(1, 2) → 2.0
-cal.add(5.5, 3.2) → 8.7
-cal.divide(10, 2) → 5.0
-cal.sub(15, 7) → 8.0
-exit()
+1) import calculator as cal
+2) cal.mul(1, 2) → 2.0
+3) cal.add(5.5, 3.2) → 8.7
+4) cal.divide(10, 2) → 5.0
+5) cal.sub(15, 7) → 8.0
+6) exit()
