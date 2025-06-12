@@ -1,75 +1,190 @@
-# CLI-calculator
-A high-performance command-line calculator with a C backend and Python interface, featuring comprehensive testing.
+#  CLI Calculator
 
-# Features:
+A command-line calculator project with a C backend, Python interface via C-Python API, and multiple supporting tools like Ninja, Sphinx documentation, pre-commit hooks, and GitHub Actions CI/CD.
 
-Fast C Backend: Core arithmetic operations implemented in C for optimal performance
+---
 
-Python Interface: Easy-to-use Python bindings using the Python C API
+## 📦 Project Structure
+```
+CLI-calculator/
+├── c_backend/
+│ ├── calc.c # C backend logic
+│ ├── calc.h # C function declarations
+│ └── test_calc.c # C unit tests
+│
+├── python_interface/
+│ ├── calculator.c # Python C extension wrapper
+│ ├── init.py # Python package initializer
+│ ├── cli.py # CLI tool (argparse)
+│ └── tests/
+│ └── test_calculator.py # Python unit tests
+│
+├── docs/
+│ ├── source/ # reStructuredText source files
+│ └── conf.py # Sphinx config
+  │ └── Makefile/ # Generated documentation
+│
+├── .github/
+│ └── workflows/
+│ └── ci.yml # GitHub Actions CI/CD workflow
+│
+├── .pre-commit-config.yaml # Pre-commit hooks config
+├── build.ninja # Ninja build system file
+├── setup.py # Python packaging setup
+├── pyproject.toml # PEP 518 build system file
+├── requirements.txt # Python dependencies
+└── README.md # This file
+```
 
-Command Line Interface: Simple and intuitive CLI for quick calculations
+---
 
-Cross-Platform: Compatible with Windows, macOS, and Linux
+### Notes
+   1) Python 3.12 assumed — adjust paths in build.ninja if needed.
 
-Comprehensive Testing: Includes both C and Python test suites with CI/CD integration
+   2) <Python.h> is added in the c package.
+      if not search for folder path Python.h (usually in appdata/local/programs/python/pythonver/include)
+      then add the folder extension to your C interpreter. 
 
-Development Tools: Support for code formatting, linting, and coverage reporting
+---
 
+## 📖 Features
 
+✅ Modular C backend logic  
+✅ Python C extension module  
+✅ Command-line interface with `argparse`  
+✅ C and Python unit tests  
+✅ Ninja build system (Windows-optimized)  
+✅ Sphinx developer documentation  
+✅ Pre-commit hooks for code formatting and linting  
+✅ GitHub Actions CI/CD workflow  
 
-# Installation:
+---
 
-# Quick Install (Method 1 - Using Make)
+## 🚀 Quick Installation Options
 
-Step 1: Run CMD as Adminstrator then For Window Install via Chocolatey (Recommended if you have Chocolatey):
+### 📌 Method 1 — Install with Make (if you have Chocolatey)
+
+> Recommended if you have Chocolatey installed. Install Make via Chocolatey:
+
+```
 choco install make
+```
+Then:
 
-Step 2: Clone the repository
-Run the following command:
-git clone <repository-url>
-Then navigate into the project directory:
-cd calculator
-
-Step 3: Run in Terminal (pip install -r requirements.txt)
-
-Step 4: Install dependencies and setup
-Run:
-make install
-
-Step 5: Build the C extension
-Run:
-make build
-
-Step 6: Test the Python interface
-Run:
-make test_python
-
-Step 7: Clean up build artifacts
-Run:
-make clean
-
-
-# Quick Install (Method 2 - Using pip)
-
-Step 1: Clone the repository
-Run:
-git clone <repository-url>
-Then navigate into the project directory:
+1️⃣ Clone the repository:
+```
+git clone https://github.com/tahaaa22/CLI-calculator
 cd CLI-calculator
-
-Step 2: Install in development mode
-Run:
+```
+2️⃣ Install project dependencies:
+```
+pip install -r requirements.txt
+```
+3️⃣ Install pre-commit hooks:
+```
+pre-commit install
+```
+4️⃣ Install and build:
+```
+make install
+make build
+```
+5️⃣ Run tests:
+```
+make test_python
+```
+6️⃣ Clean build artifacts:
+```
+make clean
+```
+### 📌 Method 2 — Install with pip (editable install)
+1️⃣ Clone the repository:
+```
+git clone https://github.com/tahaaa22/CLI-calculator
+cd CLI-calculator
+```
+2️⃣ Install dependencies:
+```
+pip install -r requirements.txt
+pip install pre-commit
+pre-commit install
+```
+3️⃣ Install in development (editable) mode:
+```
 pip install -e .
+```
+4️⃣ Test it in Python shell:
+```
+>>> import calculator as cal
+>>> cal.mul(1, 2)
+2.0
+>>> cal.add(5.5, 3.2)
+8.7
+>>> cal.divide(10, 2)
+5.0
+>>> cal.sub(15, 7)
+8.0
+>>> exit()
+```
 
-Step 3: Test it out
-Start a Python interactive session by running:
-python
+### 🔧 Ninja-based Build Workflow (Recommended for Windows)
+1️⃣ Install dependencies:
+```
+pip install -r requirements.txt
+pip install sphinx pre-commit ninja
+```
+✅ Install Ninja executable:
 
-Step 4: In the Python interactive session, run the following commands:
+   1) Download: https://github.com/ninja-build/ninja/releases
 
-1) import calculator as cal
-2) cal.mul(1, 2) → 2.0
-3) cal.add(5.5, 3.2) → 8.7
-4) cal.divide(10, 2) → 5.0
-5) cal.sub(15, 7) → 8.0
-6) exit()
+   2) Extract ninja.exe to a folder
+
+   3) Add the folder to your system PATH
+
+2️⃣ Build the extension:
+```
+ninja extbuild
+```
+3️⃣ Run C unit tests:
+```
+ninja testc
+```
+4️⃣ Run Python unit tests:
+```
+ninja testpy
+```
+5️⃣ Run the CLI:
+```
+python python_interface/cli.py add 5 3
+```
+6️⃣ Generate Sphinx docs:
+```
+python -m sphinx.cmd.build -b html docs/source docs/build
+```
+or via Ninja:
+```
+ninja docs
+```
+7️⃣ Clean build artifacts:
+```
+ninja cleanall
+```
+8️⃣ Pre-commit setup:
+```
+pre-commit install
+pre-commit run --all-files
+```
+
+---
+
+### 📜 License
+MIT License © 2025 Ahmed Taha
+
+---
+
+### 📧 Contact
+- [Ahmed Taha](https://github.com/tahaaa22)
+- [Ghada tarek](https://github.com/ghada-elboghdady)
+- [Amr doma](https://github.com/AmrDoma)
+- [Youssef awad](https://github.com/Youssef-Awad2004)
+- [Sama Mohamed](https://github.com/SamaMohamed10)
