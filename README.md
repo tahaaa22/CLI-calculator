@@ -10,19 +10,20 @@ CLI-calculator/
 ├── c_backend/
 │ ├── calc.c # C backend logic
 │ ├── calc.h # C function declarations
-│ └── test_calc.c # C unit tests
 │
 ├── python_interface/
 │ ├── calculator.c # Python C extension wrapper
 │ ├── init.py # Python package initializer
 │ ├── cli.py # CLI tool (argparse)
-│ └── tests/
+│
+├──  tests/
+│ └── test_calc.c # C unit tests
 │ └── test_calculator.py # Python unit tests
 │
 ├── docs/
 │ ├── source/ # reStructuredText source files
 │ └── conf.py # Sphinx config
-  │ └── Makefile/ # Generated documentation
+│ └── Makefile/ # Generated documentation
 │
 ├── .github/
 │ └── workflows/
@@ -33,6 +34,7 @@ CLI-calculator/
 ├── setup.py # Python packaging setup
 ├── pyproject.toml # PEP 518 build system file
 ├── requirements.txt # Python dependencies
+├── Doxyfile # Doxygen setup file
 └── README.md # This file
 ```
 
