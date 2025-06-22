@@ -3,7 +3,7 @@ Calculator package - C-backed calculator with Python interface
 """
 
 try:
-    from ._calc import add, sub, mul, divide
+    from ._calc import add, sub, mul, divide, power
 except ImportError as e:
     # Provide a helpful error message if the C extension isn't built
     raise ImportError(
@@ -16,4 +16,4 @@ __version__ = "0.1.0"
 __author__ = "Youssef Awad, Amr Doma"
 
 # Export the main functions
-__all__ = ["add", "sub", "mul", "divide"]
+__all__ = ["add", "sub", "mul", "divide", "power"]

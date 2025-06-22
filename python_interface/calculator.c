@@ -74,6 +74,25 @@ static PyObject *py_divide(PyObject *self, PyObject *args)
 }
 
 /**
+ * @brief Wrapper for the power function.
+ *
+ * Raises the first double to the power of the second, both provided as Python arguments.
+ *
+ * @param self Unused.
+ * @param args Tuple containing two doubles.
+ * @return Python float representing the result, or NULL on failure.
+ */
+static PyObject *py_power(PyObject *self, PyObject *args)
+{
+    double base, exponent;
+    if (!PyArg_ParseTuple(args, "dd", &base, &exponent))
+        return NULL;
+
+    // Call the C power function and return the result as a Python float
+    return PyFloat_FromDouble(power(base, exponent));
+}
+
+/**
  * @brief Method definitions for the calculator module.
  */
 static PyMethodDef CalcMethods[] = {
@@ -81,6 +100,7 @@ static PyMethodDef CalcMethods[] = {
     {"sub", py_sub, METH_VARARGS, "Subtract two numbers"},
     {"mul", py_mul, METH_VARARGS, "Multiply two numbers"},
     {"divide", py_divide, METH_VARARGS, "Divide two numbers"},
+    {"power", py_power, METH_VARARGS, "Raise a number to a power"},
     {NULL, NULL, 0, NULL}};
 
 /**

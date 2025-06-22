@@ -8,3 +8,7 @@ python_interface/*.pyc
 tests/test_c_calc.exe
 **/__pycache__/
 python_interface/_calc.cp312-win_amd64.pyd
+.venv/
+html
+latex
+xml
