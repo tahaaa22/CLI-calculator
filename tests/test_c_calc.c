@@ -30,6 +30,11 @@ int main()
         printf("divide by zero failed\n");
         return 1;
     }
+    if (power(2, 3) != 8.0)
+    {
+        printf("power failed\n");
+        return 1;
+    }
 
     printf("All C tests passed!\n");
     return 0;

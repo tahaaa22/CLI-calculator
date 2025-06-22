@@ -40,6 +40,10 @@ class TestCalcPython(unittest.TestCase):
         self.assertEqual(_calc.divide(5, 0), 0)  # Division by zero returns 0
         self.assertAlmostEqual(_calc.divide(1, 3), 0.3333333333333, places=10)
 
+    def test_power(self):
+        self.assertEqual(_calc.power(2, 3), 8)
+        self.assertEqual(_calc.power(5, 0), 1)
+
     def test_edge_cases(self):
         # Test very large numbers
         self.assertAlmostEqual(_calc.add(1e15, 1e15), 2e15)
